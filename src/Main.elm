@@ -4,6 +4,7 @@ import Html exposing (Html)
 import Html.Attributes as Attributes
 import Html.Events as Events
 import List.Extra as List
+import Ports
 
 
 -- MODEL
@@ -14,6 +15,7 @@ type alias Model =
     , currentSong : Song
     , nextSongs : List Song
     , drawerState : Maybe DrawerMode
+    , autoplay : Bool
     }
 
 
@@ -608,6 +610,7 @@ init =
               }
             ]
       , drawerState = Nothing
+      , autoplay = False
       }
     , Cmd.none
     )
@@ -624,6 +627,8 @@ type Msg
     | OpenDrawer DrawerMode
     | SelectSong Song
     | SelectArtist String
+    | YoutubeStateChange Int
+    | ToggleAutoPlay
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -646,6 +651,15 @@ update msg model =
 
         SelectArtist artist ->
             ( { model | drawerState = Just (Artists (Just artist)) }, Cmd.none )
+
+        YoutubeStateChange state ->
+            if state == 0 && model.autoplay then
+                ( pageUp model, Cmd.none )
+            else
+                ( model, Cmd.none )
+
+        ToggleAutoPlay ->
+            ( { model | autoplay = not model.autoplay }, Cmd.none )
 
 
 selectSong : Model -> Song -> Model
@@ -708,14 +722,15 @@ view : Model -> Html Msg
 view model =
     Html.div
         [ Attributes.class "app-container" ]
-        [ songView model.currentSong
-        , navButton "drawer-open" (OpenDrawer (Artists Nothing))
+        [ songView model.currentSong model.autoplay
+        , navButton True
+        , playAllButton model.autoplay
         , navigationView model
         ]
 
 
-songView : Song -> Html Msg
-songView song =
+songView : Song -> Bool -> Html Msg
+songView song autoplay =
     Html.div
         [ Attributes.class "song-view" ]
         [ Html.div
@@ -733,7 +748,7 @@ songView song =
                 [ Html.text "<" ]
             , Html.div
                 [ Attributes.class "song-view__video" ]
-                [ youtubeVideo song.video
+                [ youtubeVideo song.video autoplay
                 ]
             , Html.div
                 [ Attributes.class "arrow"
@@ -766,7 +781,7 @@ navViewHeader : Maybe DrawerMode -> Html Msg
 navViewHeader drawerState =
     Html.div
         [ Attributes.class "navigation-view__header" ]
-        [ navButton "drawer-close" CloseDrawer
+        [ navButton False
         , Html.div
             [ Attributes.class "navigation-view__header__title" ]
             [ navTitle
@@ -887,28 +902,64 @@ artistSongs model artist =
         |> List.sortBy .title
 
 
-navButton : String -> msg -> Html msg
-navButton class msg =
+navButton : Bool -> Html Msg
+navButton openButton =
+    let
+        msg =
+            if openButton then
+                OpenDrawer (Artists Nothing)
+            else
+                CloseDrawer
+
+        title =
+            if openButton then
+                "Open Menu"
+            else
+                "Close Menu"
+    in
+        Html.div
+            [ Attributes.classList
+                [ ( "nav-button", True )
+                , ( "drawer-open", openButton )
+                , ( "drawer-close", not openButton )
+                ]
+            , Attributes.title title
+            , Events.onClick msg
+            ]
+            [ Html.i
+                [ Attributes.class "material-icons" ]
+                [ Html.text "menu" ]
+            ]
+
+
+playAllButton : Bool -> Html Msg
+playAllButton autoplay =
     Html.div
-        [ Attributes.class ("nav-button " ++ class)
-        , Events.onClick msg
+        [ Attributes.classList
+            [ ( "play-all-button", True )
+            , ( "play-all-button--selected", autoplay )
+            ]
+        , Attributes.title "Autoplay Mode"
         ]
         [ Html.i
-            [ Attributes.class "material-icons" ]
-            [ Html.text "menu" ]
+            [ Attributes.class "material-icons"
+            , Events.onClick ToggleAutoPlay
+            ]
+            [ Html.text "playlist_play" ]
         ]
 
 
-youtubeVideo : String -> Html msg
-youtubeVideo id =
+youtubeVideo : String -> Bool -> Html msg
+youtubeVideo id autoplay =
     Html.iframe
-        [ Attributes.src (youtubeUrl False id)
+        [ Attributes.src (youtubeUrl autoplay id)
         , Attributes.height 315
         , Attributes.width 560
         , Attributes.attribute "frameborder" "0"
         , Attributes.attribute "gesture" "media"
         , Attributes.attribute "allow" "encrypted-media"
         , Attributes.attribute "allowfullscreen" ""
+        , Attributes.id "video-player"
         ]
         []
 
@@ -917,8 +968,9 @@ youtubeUrl : Bool -> String -> String
 youtubeUrl autoplay id =
     "https://www.youtube.com/embed/"
         ++ id
+        ++ "?enablejsapi=1"
         ++ (if autoplay then
-                "?autoplay=1"
+                "&autoplay=1"
             else
                 ""
            )
@@ -946,7 +998,7 @@ drawerOpen drawerState =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.none
+    Ports.youtubeStateChange YoutubeStateChange
 
 
 main : Program Never Model Msg

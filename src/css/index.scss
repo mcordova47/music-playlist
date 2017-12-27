@@ -150,3 +150,16 @@
   color: #9c9c9c;
   font-size: 18px;
 }
+
+.play-all-button {
+  cursor: pointer;
+  padding: 10px;
+  color: #323232;
+  position: fixed;
+  top: 0;
+  left: 30px;
+}
+
+.play-all-button--selected {
+  color: #ffc107;
+}
