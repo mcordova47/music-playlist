@@ -473,7 +473,16 @@ init =
               , album = "One Beat"
               , year = 2002
               , video = "2mOrhpSWTec"
-              , notes = ""
+              , notes =
+                    String.join ""
+                        [ "I'm not sure you'd like many of their songs, but Sleater-"
+                        , "Kinney is a pretty talented band.  The guitarist is also "
+                        , "in the show Portlandia and is very funny.  I thought you'd"
+                        , " appreciate this song, since it was written by the lead "
+                        , "singer about her son when she was pregnant and the doctor "
+                        , "wasn't sure whether he would survive.  The emotion really "
+                        , "comes through in her voice."
+                        ]
               }
             , { title = "Lua"
               , artist = "Bright Eyes"
