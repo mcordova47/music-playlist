@@ -646,10 +646,10 @@ redirect : Maybe Route -> Cmd Msg
 redirect route =
     case route of
         Just Home ->
-            Navigation.modifyUrl "/#/song/P_Fx1yq3A8M"
+            Navigation.modifyUrl "#/song/P_Fx1yq3A8M"
 
         Just (SongView video) ->
-            Navigation.modifyUrl ("/#/song/" ++ video)
+            Navigation.modifyUrl ("#/song/" ++ video)
 
         _ ->
             Cmd.none
@@ -722,7 +722,7 @@ update msg model =
 
 setUrl : Song -> Cmd Msg
 setUrl song =
-    Navigation.newUrl ("/#/song/" ++ song.video)
+    Navigation.newUrl ("#/song/" ++ song.video)
 
 
 parseVideo : Maybe Route -> Maybe String
