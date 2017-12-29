@@ -5,6 +5,8 @@ import Html.Attributes as Attributes
 import Html.Events as Events
 import List.Extra as List
 import Ports
+import Navigation exposing (Location)
+import UrlParser exposing ((</>))
 
 
 -- MODEL
@@ -34,8 +36,21 @@ type alias Song =
     }
 
 
-init : ( Model, Cmd Msg )
-init =
+type Route
+    = Home
+    | SongView String
+
+
+route : UrlParser.Parser (Route -> a) a
+route =
+    UrlParser.oneOf
+        [ UrlParser.map Home UrlParser.top
+        , UrlParser.map SongView (UrlParser.s "song" </> UrlParser.string)
+        ]
+
+
+init : Location -> ( Model, Cmd Msg )
+init location =
     ( { previousSongs = []
       , currentSong =
             { title = "715 - CR∑∑KS"
@@ -621,8 +636,23 @@ init =
       , drawerState = Nothing
       , autoplay = False
       }
-    , Cmd.none
+    , location
+        |> UrlParser.parseHash route
+        |> redirect
     )
+
+
+redirect : Maybe Route -> Cmd Msg
+redirect route =
+    case route of
+        Just Home ->
+            Navigation.modifyUrl "/#/song/P_Fx1yq3A8M"
+
+        Just (SongView video) ->
+            Navigation.modifyUrl ("/#/song/" ++ video)
+
+        _ ->
+            Cmd.none
 
 
 
@@ -638,16 +668,25 @@ type Msg
     | SelectArtist String
     | YoutubeStateChange Int
     | ToggleAutoPlay
+    | UrlChange Location
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         PageUp ->
-            ( pageUp model, Cmd.none )
+            let
+                newModel =
+                    pageUp model
+            in
+                ( newModel, setUrl newModel.currentSong )
 
         PageDown ->
-            ( pageDown model, Cmd.none )
+            let
+                newModel =
+                    pageDown model
+            in
+                ( newModel, setUrl newModel.currentSong )
 
         CloseDrawer ->
             ( { model | drawerState = Nothing }, Cmd.none )
@@ -656,7 +695,7 @@ update msg model =
             ( { model | drawerState = Just mode }, Cmd.none )
 
         SelectSong song ->
-            ( selectSong model song, Cmd.none )
+            ( selectSong model song, setUrl song )
 
         SelectArtist artist ->
             ( { model | drawerState = Just (Artists (Just artist)) }, Cmd.none )
@@ -669,6 +708,61 @@ update msg model =
 
         ToggleAutoPlay ->
             ( { model | autoplay = not model.autoplay }, Cmd.none )
+
+        UrlChange location ->
+            let
+                video =
+                    location
+                        |> UrlParser.parseHash route
+                        |> parseVideo
+                        |> Maybe.withDefault ""
+            in
+                ( maybeChangeSong model video, Cmd.none )
+
+
+setUrl : Song -> Cmd Msg
+setUrl song =
+    Navigation.newUrl ("/#/song/" ++ song.video)
+
+
+parseVideo : Maybe Route -> Maybe String
+parseVideo route =
+    case route of
+        Just (SongView video) ->
+            Just video
+
+        _ ->
+            Nothing
+
+
+maybeChangeSong : Model -> String -> Model
+maybeChangeSong model video =
+    if model.currentSong.video == video then
+        model
+    else
+        selectSongById model video
+
+
+selectSongById : Model -> String -> Model
+selectSongById model video =
+    let
+        allSongs =
+            sortedSongs model
+
+        filteredSongs =
+            List.filter ((==) video << .video) allSongs
+
+        maybeSong =
+            case filteredSongs of
+                [] ->
+                    Nothing
+
+                song :: _ ->
+                    Just song
+    in
+        maybeSong
+            |> Maybe.map (selectSong model)
+            |> Maybe.withDefault model
 
 
 selectSong : Model -> Song -> Model
@@ -1012,7 +1106,7 @@ subscriptions model =
 
 main : Program Never Model Msg
 main =
-    Html.program
+    Navigation.program UrlChange
         { init = init
         , update = update
         , view = view
