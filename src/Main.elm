@@ -12,6 +12,17 @@ import Songs exposing (Song)
 import SelectList exposing (SelectList)
 
 
+main : Program Never Model Msg
+main =
+    Navigation.program UrlChange
+        { init = init
+        , update = update
+        , view = view
+        , subscriptions = subscriptions
+        }
+
+
+
 -- MODEL
 
 
@@ -435,13 +446,3 @@ drawerOpen drawerState =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Ports.youtubeStateChange YoutubeStateChange
-
-
-main : Program Never Model Msg
-main =
-    Navigation.program UrlChange
-        { init = init
-        , update = update
-        , view = view
-        , subscriptions = subscriptions
-        }
