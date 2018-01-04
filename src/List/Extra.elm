@@ -24,7 +24,7 @@ dropWhile predicate list =
             if predicate x then
                 dropWhile predicate xs
             else
-                x :: xs
+                list
 
 
 span : (a -> Bool) -> List a -> ( List a, List a )
