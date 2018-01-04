@@ -120,14 +120,13 @@ update msg model =
             ( { model | autoplay = not model.autoplay }, Cmd.none )
 
         UrlChange location ->
-            let
-                video =
-                    location
-                        |> UrlParser.parseHash route
-                        |> parseVideo
-                        |> Maybe.withDefault ""
-            in
-                ( selectSongById model video, Cmd.none )
+            ( location
+                |> UrlParser.parseHash route
+                |> parseVideo
+                |> Maybe.withDefault ""
+                |> selectSongById model
+            , Cmd.none
+            )
 
 
 setUrl : Song -> Cmd Msg
