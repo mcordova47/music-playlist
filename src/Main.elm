@@ -1,4 +1,4 @@
-module Main exposing (..)
+module Main exposing (main)
 
 import Html exposing (Html)
 import Html.Attributes as Attributes
@@ -9,15 +9,14 @@ import Navigation exposing (Location)
 import UrlParser exposing ((</>))
 import Markdown
 import Songs exposing (Song)
+import SelectList exposing (SelectList)
 
 
 -- MODEL
 
 
 type alias Model =
-    { previousSongs : List Song
-    , currentSong : Song
-    , nextSongs : List Song
+    { songs : Songs.Model
     , drawerState : Maybe DrawerMode
     , autoplay : Bool
     }
@@ -43,9 +42,7 @@ route =
 
 init : Location -> ( Model, Cmd Msg )
 init location =
-    ( { previousSongs = []
-      , currentSong = Songs.currentSong
-      , nextSongs = Songs.nextSongs
+    ( { songs = Songs.init
       , drawerState = Nothing
       , autoplay = False
       }
@@ -92,14 +89,14 @@ update msg model =
                 newModel =
                     pageUp model
             in
-                ( newModel, setUrl newModel.currentSong )
+                ( newModel, setUrl (SelectList.selected newModel.songs) )
 
         PageDown ->
             let
                 newModel =
                     pageDown model
             in
-                ( newModel, setUrl newModel.currentSong )
+                ( newModel, setUrl (SelectList.selected newModel.songs) )
 
         CloseDrawer ->
             ( { model | drawerState = Nothing }, Cmd.none )
@@ -150,58 +147,22 @@ parseVideo route =
 
 selectSongById : Model -> String -> Model
 selectSongById model video =
-    if model.currentSong.video == video then
-        model
-    else
-        sortedSongs model
-            |> List.filter ((==) video << .video)
-            |> List.head
-            |> Maybe.map (selectSong model)
-            |> Maybe.withDefault model
+    { model | songs = SelectList.select ((==) video << .video) model.songs }
 
 
 selectSong : Model -> Song -> Model
 selectSong model song =
-    let
-        ( previousSongs, nextSongs ) =
-            sortedSongs model
-                |> List.span ((/=) song)
-                |> Tuple.mapFirst List.reverse
-                |> Tuple.mapSecond List.safeTail
-    in
-        { model
-            | previousSongs = previousSongs
-            , currentSong = song
-            , nextSongs = nextSongs
-        }
+    { model | songs = SelectList.select ((==) song) model.songs }
 
 
 pageUp : Model -> Model
 pageUp model =
-    case model.nextSongs of
-        [] ->
-            model
-
-        next :: rest ->
-            { model
-                | previousSongs = model.currentSong :: model.previousSongs
-                , currentSong = next
-                , nextSongs = rest
-            }
+    selectSong model (Songs.nextOrCurrent model.songs)
 
 
 pageDown : Model -> Model
 pageDown model =
-    case model.previousSongs of
-        [] ->
-            model
-
-        prev :: rest ->
-            { model
-                | previousSongs = rest
-                , currentSong = prev
-                , nextSongs = model.currentSong :: model.nextSongs
-            }
+    selectSong model (Songs.previousOrCurrent model.songs)
 
 
 
@@ -212,7 +173,7 @@ view : Model -> Html Msg
 view model =
     Html.div
         [ Attributes.class "app-container" ]
-        [ songView model.currentSong model.autoplay
+        [ songView (SelectList.selected model.songs) model.autoplay
         , navButton True
         , playAllButton model.autoplay
         , navigationView model
@@ -286,7 +247,8 @@ navTitle =
 
 artistList : Model -> List (Html Msg)
 artistList model =
-    sortedSongs model
+    model.songs
+        |> SelectList.toList
         |> List.map .artist
         |> List.distinct
         |> List.sort
@@ -295,8 +257,9 @@ artistList model =
 
 songList : Model -> List (Html Msg)
 songList model =
-    sortedSongs model
-        |> List.map (songLinkMain model.currentSong)
+    model.songs
+        |> SelectList.toList
+        |> List.map (songLinkMain (SelectList.selected model.songs))
 
 
 listFunc : DrawerMode -> Model -> List (Html Msg)
@@ -369,7 +332,7 @@ artistSongView model artist =
         Html.div
             []
             (artistSongs model artist
-                |> List.map (songLinkSmall model.currentSong)
+                |> List.map (songLinkSmall (SelectList.selected model.songs))
             )
     else
         Html.text ""
@@ -387,7 +350,8 @@ isSelected drawerState artist =
 
 artistSongs : Model -> String -> List Song
 artistSongs model artist =
-    sortedSongs model
+    model.songs
+        |> SelectList.toList
         |> List.filter ((==) artist << .artist)
         |> List.sortBy .title
 
@@ -464,12 +428,6 @@ youtubeUrl autoplay id =
             else
                 ""
            )
-
-
-sortedSongs : Model -> List Song
-sortedSongs model =
-    (List.reverse model.previousSongs)
-        ++ (model.currentSong :: model.nextSongs)
 
 
 drawerOpen : Maybe DrawerMode -> Bool

@@ -1,4 +1,17 @@
-module Songs exposing (..)
+module Songs
+    exposing
+        ( Model
+        , Song
+        , init
+        , nextOrCurrent
+        , previousOrCurrent
+        )
+
+import SelectList exposing (SelectList)
+
+
+type alias Model =
+    SelectList Song
 
 
 type alias Song =
@@ -11,8 +24,45 @@ type alias Song =
     }
 
 
-currentSong : Song
-currentSong =
+init : SelectList Song
+init =
+    SelectList.fromLists
+        []
+        initSelected
+        initAfter
+
+
+nextOrCurrent : SelectList a -> a
+nextOrCurrent selectList =
+    selectList
+        |> next
+        |> Maybe.withDefault (SelectList.selected selectList)
+
+
+previousOrCurrent : SelectList a -> a
+previousOrCurrent selectList =
+    selectList
+        |> previous
+        |> Maybe.withDefault (SelectList.selected selectList)
+
+
+next : SelectList a -> Maybe a
+next selectList =
+    selectList
+        |> SelectList.after
+        |> List.head
+
+
+previous : SelectList a -> Maybe a
+previous selectList =
+    selectList
+        |> SelectList.before
+        |> List.reverse
+        |> List.head
+
+
+initSelected : Song
+initSelected =
     { title = "715 - CR∑∑KS"
     , artist = "Bon Iver"
     , album = "22, A Million"
@@ -28,8 +78,8 @@ Creeks is probably my favorite song from *22, A Million*.  It highlights the
     }
 
 
-nextSongs : List Song
-nextSongs =
+initAfter : List Song
+initAfter =
     [ { title = "33 \"God\""
       , artist = "Bon Iver"
       , album = "22, A Million"
