@@ -7,6 +7,7 @@ import List.Extra as List
 import Ports
 import Navigation exposing (Location)
 import UrlParser exposing ((</>))
+import Markdown
 
 
 -- MODEL
@@ -60,7 +61,7 @@ init location =
             , video = "P_Fx1yq3A8M"
             , notes =
                 String.join ""
-                    [ "Creeks is probably my favorite song from 22, A Million."
+                    [ "Creeks is probably my favorite song from *22, A Million*."
                     , "  It highlights the instrument he uses throughout the "
                     , "album - the Messina - created on his request by Justin's"
                     , " sound engineer, Chris Messina.  It basically allows him"
@@ -862,7 +863,7 @@ songView song autoplay =
         , Html.div
             [ Attributes.class "song-view__notes" ]
             [ Html.p []
-                [ Html.text song.notes ]
+                [ Markdown.toHtml [] song.notes ]
             ]
         ]
 
