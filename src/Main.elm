@@ -85,18 +85,18 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         PageUp ->
-            let
-                newModel =
-                    pageUp model
-            in
-                ( newModel, setUrl (SelectList.selected newModel.songs) )
+            ( model
+            , model.songs
+                |> Songs.nextOrCurrent
+                |> setUrl
+            )
 
         PageDown ->
-            let
-                newModel =
-                    pageDown model
-            in
-                ( newModel, setUrl (SelectList.selected newModel.songs) )
+            ( model
+            , model.songs
+                |> Songs.previousOrCurrent
+                |> setUrl
+            )
 
         CloseDrawer ->
             ( { model | drawerState = Nothing }, Cmd.none )
@@ -105,14 +105,18 @@ update msg model =
             ( { model | drawerState = Just mode }, Cmd.none )
 
         SelectSong song ->
-            ( selectSong model song, setUrl song )
+            ( model, setUrl song )
 
         SelectArtist artist ->
             ( { model | drawerState = Just (Artists (Just artist)) }, Cmd.none )
 
         YoutubeStateChange state ->
             if state == 0 && model.autoplay then
-                ( pageUp model, Cmd.none )
+                ( model
+                , model.songs
+                    |> Songs.nextOrCurrent
+                    |> setUrl
+                )
             else
                 ( model, Cmd.none )
 
@@ -147,21 +151,6 @@ parseVideo route =
 selectSongById : Model -> String -> Model
 selectSongById model video =
     { model | songs = SelectList.select ((==) video << .video) model.songs }
-
-
-selectSong : Model -> Song -> Model
-selectSong model song =
-    { model | songs = SelectList.select ((==) song) model.songs }
-
-
-pageUp : Model -> Model
-pageUp model =
-    selectSong model (Songs.nextOrCurrent model.songs)
-
-
-pageDown : Model -> Model
-pageDown model =
-    selectSong model (Songs.previousOrCurrent model.songs)
 
 
 
