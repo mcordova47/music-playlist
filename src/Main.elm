@@ -130,7 +130,7 @@ update msg model =
                         |> parseVideo
                         |> Maybe.withDefault ""
             in
-                ( maybeChangeSong model video, Cmd.none )
+                ( selectSongById model video, Cmd.none )
 
 
 setUrl : Song -> Cmd Msg
@@ -148,32 +148,14 @@ parseVideo route =
             Nothing
 
 
-maybeChangeSong : Model -> String -> Model
-maybeChangeSong model video =
+selectSongById : Model -> String -> Model
+selectSongById model video =
     if model.currentSong.video == video then
         model
     else
-        selectSongById model video
-
-
-selectSongById : Model -> String -> Model
-selectSongById model video =
-    let
-        allSongs =
-            sortedSongs model
-
-        filteredSongs =
-            List.filter ((==) video << .video) allSongs
-
-        maybeSong =
-            case filteredSongs of
-                [] ->
-                    Nothing
-
-                song :: _ ->
-                    Just song
-    in
-        maybeSong
+        sortedSongs model
+            |> List.filter ((==) video << .video)
+            |> List.head
             |> Maybe.map (selectSong model)
             |> Maybe.withDefault model
 
@@ -181,19 +163,10 @@ selectSongById model video =
 selectSong : Model -> Song -> Model
 selectSong model song =
     let
-        allSongs =
+        ( previousSongs, nextSongs ) =
             sortedSongs model
-
-        previousSongs =
-            allSongs
-                |> List.takeWhile ((/=) song)
-                |> List.reverse
-
-        nextSongs =
-            allSongs
-                |> List.reverse
-                |> List.takeWhile ((/=) song)
-                |> List.reverse
+                |> List.span ((/=) song)
+                |> Tuple.mapSecond List.safeTail
     in
         { model
             | previousSongs = previousSongs

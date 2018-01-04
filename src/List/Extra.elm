@@ -14,6 +14,24 @@ takeWhile predicate list =
                 []
 
 
+dropWhile : (a -> Bool) -> List a -> List a
+dropWhile predicate list =
+    case list of
+        [] ->
+            []
+
+        x :: xs ->
+            if predicate x then
+                dropWhile predicate xs
+            else
+                xs
+
+
+span : (a -> Bool) -> List a -> ( List a, List a )
+span p list =
+    ( takeWhile p list, dropWhile p list )
+
+
 distinct : List a -> List a
 distinct =
     List.foldl
@@ -29,3 +47,13 @@ distinct =
 elem : a -> List a -> Bool
 elem a =
     List.any ((==) a)
+
+
+safeTail : List a -> List a
+safeTail list =
+    case list of
+        [] ->
+            []
+
+        x :: xs ->
+            xs
