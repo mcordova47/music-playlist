@@ -166,6 +166,7 @@ selectSong model song =
         ( previousSongs, nextSongs ) =
             sortedSongs model
                 |> List.span ((/=) song)
+                |> Tuple.mapFirst List.reverse
                 |> Tuple.mapSecond List.safeTail
     in
         { model
