@@ -6,7 +6,6 @@ import Html.Events as Events
 import List.Extra as List
 import Ports
 import Navigation exposing (Location)
-import UrlParser exposing ((</>))
 import Markdown
 import Songs exposing (Song)
 import SelectList exposing (SelectList)
