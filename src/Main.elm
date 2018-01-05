@@ -10,6 +10,7 @@ import UrlParser exposing ((</>))
 import Markdown
 import Songs exposing (Song)
 import SelectList exposing (SelectList)
+import Routes exposing (Route(..))
 
 
 main : Program Never Model Msg
@@ -38,42 +39,14 @@ type DrawerMode
     | Artists (Maybe String)
 
 
-type Route
-    = Home
-    | SongView String
-
-
-route : UrlParser.Parser (Route -> a) a
-route =
-    UrlParser.oneOf
-        [ UrlParser.map Home UrlParser.top
-        , UrlParser.map SongView (UrlParser.s "song" </> UrlParser.string)
-        ]
-
-
 init : Location -> ( Model, Cmd Msg )
 init location =
     ( { songs = Songs.init
       , drawerState = Nothing
       , autoplay = False
       }
-    , location
-        |> UrlParser.parseHash route
-        |> redirect
+    , Routes.enterLocation location
     )
-
-
-redirect : Maybe Route -> Cmd Msg
-redirect route =
-    case route of
-        Just Home ->
-            Navigation.modifyUrl "#/song/P_Fx1yq3A8M"
-
-        Just (SongView video) ->
-            Navigation.modifyUrl ("#/song/" ++ video)
-
-        _ ->
-            Cmd.none
 
 
 
@@ -85,7 +58,6 @@ type Msg
     | PageDown
     | CloseDrawer
     | OpenDrawer DrawerMode
-    | SelectSong Song
     | SelectArtist String
     | YoutubeStateChange Int
     | ToggleAutoPlay
@@ -115,9 +87,6 @@ update msg model =
         OpenDrawer mode ->
             ( { model | drawerState = Just mode }, Cmd.none )
 
-        SelectSong song ->
-            ( model, setUrl song )
-
         SelectArtist artist ->
             ( { model | drawerState = Just (Artists (Just artist)) }, Cmd.none )
 
@@ -136,7 +105,7 @@ update msg model =
 
         UrlChange location ->
             ( location
-                |> UrlParser.parseHash route
+                |> Routes.parseLocation
                 |> parseVideo
                 |> Maybe.withDefault ""
                 |> selectSongById model
@@ -146,7 +115,7 @@ update msg model =
 
 setUrl : Song -> Cmd Msg
 setUrl song =
-    Navigation.newUrl ("#/song/" ++ song.video)
+    Navigation.newUrl (Routes.url (SongView song.video))
 
 
 parseVideo : Maybe Route -> Maybe String
@@ -286,13 +255,13 @@ navList model =
 
 songLink : String -> Song -> Song -> Html Msg
 songLink class currentSong song =
-    Html.div
+    Html.a
         [ Attributes.classList
             [ ( "nav-link", True )
             , ( "nav-link--selected", song == currentSong )
             , ( class, True )
             ]
-        , Events.onClick (SelectSong song)
+        , Attributes.href (Routes.url (SongView song.video))
         ]
         [ Html.text song.title ]
 
