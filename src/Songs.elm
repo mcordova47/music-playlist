@@ -3,8 +3,8 @@ module Songs
         ( Model
         , Song
         , init
-        , nextOrCurrent
-        , previousOrCurrent
+        , next
+        , previous
         )
 
 import SelectList exposing (SelectList)
@@ -30,20 +30,6 @@ init =
         []
         initSelected
         initAfter
-
-
-nextOrCurrent : SelectList a -> a
-nextOrCurrent selectList =
-    selectList
-        |> next
-        |> Maybe.withDefault (SelectList.selected selectList)
-
-
-previousOrCurrent : SelectList a -> a
-previousOrCurrent selectList =
-    selectList
-        |> previous
-        |> Maybe.withDefault (SelectList.selected selectList)
 
 
 next : SelectList a -> Maybe a

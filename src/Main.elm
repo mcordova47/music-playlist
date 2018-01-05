@@ -54,9 +54,7 @@ init location =
 
 
 type Msg
-    = PageUp
-    | PageDown
-    | CloseDrawer
+    = CloseDrawer
     | OpenDrawer DrawerMode
     | SelectArtist String
     | YoutubeStateChange Int
@@ -67,20 +65,6 @@ type Msg
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        PageUp ->
-            ( model
-            , model.songs
-                |> Songs.nextOrCurrent
-                |> setUrl
-            )
-
-        PageDown ->
-            ( model
-            , model.songs
-                |> Songs.previousOrCurrent
-                |> setUrl
-            )
-
         CloseDrawer ->
             ( { model | drawerState = Nothing }, Cmd.none )
 
@@ -94,8 +78,9 @@ update msg model =
             if state == 0 && model.autoplay then
                 ( model
                 , model.songs
-                    |> Songs.nextOrCurrent
-                    |> setUrl
+                    |> Songs.next
+                    |> Maybe.map setUrl
+                    |> Maybe.withDefault Cmd.none
                 )
             else
                 ( model, Cmd.none )
@@ -141,46 +126,50 @@ view : Model -> Html Msg
 view model =
     Html.div
         [ Attributes.class "app-container" ]
-        [ songView (SelectList.selected model.songs) model.autoplay
+        [ songView model
         , navButton True
         , playAllButton model.autoplay
         , navigationView model
         ]
 
 
-songView : Song -> Bool -> Html Msg
-songView song autoplay =
-    Html.div
-        [ Attributes.class "song-view" ]
-        [ Html.div
-            [ Attributes.class "song-view__artist" ]
-            [ Html.text song.artist ]
-        , Html.div
-            [ Attributes.class "song-view__title" ]
-            [ Html.text song.title ]
-        , Html.div
-            [ Attributes.class "song-view__selector" ]
+songView : Model -> Html Msg
+songView model =
+    let
+        song =
+            SelectList.selected model.songs
+    in
+        Html.div
+            [ Attributes.class "song-view" ]
             [ Html.div
-                [ Attributes.class "arrow"
-                , Events.onClick PageDown
-                ]
-                [ Html.text "<" ]
+                [ Attributes.class "song-view__artist" ]
+                [ Html.text song.artist ]
             , Html.div
-                [ Attributes.class "song-view__video" ]
-                [ youtubeVideo song.video autoplay
+                [ Attributes.class "song-view__title" ]
+                [ Html.text song.title ]
+            , Html.div
+                [ Attributes.class "song-view__selector" ]
+                [ Html.a
+                    [ Attributes.class "arrow"
+                    , Attributes.href (previousUrl model)
+                    ]
+                    [ Html.text "<" ]
+                , Html.div
+                    [ Attributes.class "song-view__video" ]
+                    [ youtubeVideo song.video model.autoplay
+                    ]
+                , Html.a
+                    [ Attributes.class "arrow"
+                    , Attributes.href (nextUrl model)
+                    ]
+                    [ Html.text ">" ]
                 ]
             , Html.div
-                [ Attributes.class "arrow"
-                , Events.onClick PageUp
+                [ Attributes.class "song-view__notes" ]
+                [ Html.p []
+                    [ Markdown.toHtml [] song.notes ]
                 ]
-                [ Html.text ">" ]
             ]
-        , Html.div
-            [ Attributes.class "song-view__notes" ]
-            [ Html.p []
-                [ Markdown.toHtml [] song.notes ]
-            ]
-        ]
 
 
 navigationView : Model -> Html Msg
@@ -274,6 +263,24 @@ songLinkMain =
 songLinkSmall : Song -> Song -> Html Msg
 songLinkSmall =
     songLink "song-link-small"
+
+
+nextUrl : Model -> String
+nextUrl model =
+    model.songs
+        |> Songs.next
+        |> Maybe.map .video
+        |> Maybe.map (Routes.url << SongView)
+        |> Maybe.withDefault "#"
+
+
+previousUrl : Model -> String
+previousUrl model =
+    model.songs
+        |> Songs.previous
+        |> Maybe.map .video
+        |> Maybe.map (Routes.url << SongView)
+        |> Maybe.withDefault "#"
 
 
 artistLink : Model -> String -> Html Msg
