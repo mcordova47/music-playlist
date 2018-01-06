@@ -8,6 +8,7 @@ module Routes
 
 import UrlParser exposing ((</>))
 import Navigation exposing (Location)
+import Songs exposing (initSelected)
 
 
 type Route
@@ -37,7 +38,7 @@ redirect : Maybe Route -> Cmd msg
 redirect route =
     case route of
         Just Home ->
-            Navigation.modifyUrl "#/song/P_Fx1yq3A8M"
+            Navigation.modifyUrl ("#/song/" ++ initSelected.video)
 
         Just (SongView video) ->
             Navigation.modifyUrl ("#/song/" ++ video)

@@ -3,6 +3,7 @@ module Songs
         ( Model
         , Song
         , init
+        , initSelected
         , next
         , previous
         )
