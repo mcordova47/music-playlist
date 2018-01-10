@@ -10,6 +10,7 @@ import Markdown
 import Songs exposing (Song)
 import SelectList exposing (SelectList)
 import Routes exposing (Route(..))
+import Formatting exposing (Format, (<>), s, string)
 
 
 main : Program Never Model Msg
@@ -380,7 +381,7 @@ playAllButton autoplay =
 youtubeVideo : String -> Bool -> Html msg
 youtubeVideo id autoplay =
     Html.iframe
-        [ Attributes.src (youtubeUrl autoplay id)
+        [ Attributes.src (youtubeUrl id autoplay)
         , Attributes.height 315
         , Attributes.width 560
         , Attributes.attribute "frameborder" "0"
@@ -392,16 +393,21 @@ youtubeVideo id autoplay =
         []
 
 
-youtubeUrl : Bool -> String -> String
-youtubeUrl autoplay id =
-    "https://www.youtube.com/embed/"
-        ++ id
-        ++ "?enablejsapi=1"
-        ++ (if autoplay then
-                "&autoplay=1"
+youtubeUrl : String -> Bool -> String
+youtubeUrl =
+    (s "https://www.youtube.com/embed/" <> string <> s "?enablejsapi=1&autoplay=" <> bit)
+        |> Formatting.print
+
+
+bit : Format r (Bool -> r)
+bit =
+    Formatting.toFormatter
+        (\bool ->
+            if bool then
+                "1"
             else
-                ""
-           )
+                "0"
+        )
 
 
 drawerOpen : Maybe DrawerMode -> Bool
