@@ -11,6 +11,7 @@ import Songs exposing (Song)
 import SelectList exposing (SelectList)
 import Routes exposing (Route(..))
 import Formatting exposing (Format, (<>), s, string)
+import Json.Decode as Decode exposing (Value, decodeValue)
 
 
 main : Program Never Model Msg
@@ -424,6 +425,11 @@ drawerOpen drawerState =
 -- SUBSCRIPTIONS
 
 
+decodeYTState : Value -> Int
+decodeYTState =
+    decodeValue Decode.int >> Result.withDefault -1
+
+
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Ports.youtubeStateChange YoutubeStateChange
+    Ports.youtubeStateChange (YoutubeStateChange << decodeYTState)
