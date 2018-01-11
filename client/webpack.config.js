@@ -15,13 +15,15 @@ const ELM_LOADER = TARGET_ENV === 'production'
   ? 'elm-webpack-loader?verbose=true&warn=true'
   : 'elm-webpack-loader?verbose=true&warn=true&debug=true'
 
+const DIST_PATH = path.resolve(__dirname, '../server/dist')
+
 const common = {
   entry: {
     app: ['./src/index.js']
   },
 
   output: {
-    path: path.resolve(__dirname, 'dist'),
+    path: DIST_PATH,
     filename: '[name].js'
   },
 
@@ -70,7 +72,7 @@ const common = {
   },
 
   plugins: [
-    new CleanWebpackPlugin(['dist']),
+    new CleanWebpackPlugin([DIST_PATH]),
 
     new HtmlWebpackPlugin({
       title: 'music-playlist',
@@ -117,6 +119,9 @@ if (TARGET_ENV === 'development') {
       stats: {
         colors: true,
         children: false
+      },
+      proxy: {
+        "/api": "http://localhost:8000"
       }
     }
   })
@@ -130,7 +135,7 @@ if (TARGET_ENV === 'production') {
   console.log('=== Building for production')
   module.exports = merge(common, {
     output: {
-      path: path.resolve(__dirname, 'dist'),
+      path: DIST_PATH,
       filename: '[name]-[hash].js'
     },
     plugins: [

@@ -12,6 +12,8 @@ import SelectList exposing (SelectList)
 import Routes exposing (Route(..))
 import Formatting exposing (Format, (<>), s, string)
 import Json.Decode as Decode exposing (Value, decodeValue)
+import Requests
+import RemoteData exposing (RemoteData(..), WebData)
 
 
 main : Program Never Model Msg
@@ -29,7 +31,7 @@ main =
 
 
 type alias Model =
-    { songs : Songs.Model
+    { songs : WebData Songs.Model
     , drawerState : Maybe DrawerMode
     , autoplay : Bool
     }
@@ -42,11 +44,12 @@ type DrawerMode
 
 init : Location -> ( Model, Cmd Msg )
 init location =
-    ( { songs = Songs.init
+    ( { songs = Loading
       , drawerState = Nothing
       , autoplay = False
       }
-    , Routes.enterLocation location
+    , RemoteData.sendRequest Requests.songs
+        |> Cmd.map (RetrieveSongs location)
     )
 
 
@@ -61,6 +64,7 @@ type Msg
     | YoutubeStateChange Int
     | ToggleAutoPlay
     | UrlChange Location
+    | RetrieveSongs Location (WebData Songs.Model)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -79,7 +83,8 @@ update msg model =
             if state == 0 && model.autoplay then
                 ( model
                 , model.songs
-                    |> Songs.next
+                    |> RemoteData.map Songs.next
+                    |> RemoteData.withDefault Nothing
                     |> Maybe.map setUrl
                     |> Maybe.withDefault Cmd.none
                 )
@@ -96,6 +101,14 @@ update msg model =
                 |> Maybe.withDefault ""
                 |> selectSongById model
             , Cmd.none
+            )
+
+        RetrieveSongs location result ->
+            ( { model | songs = result }
+            , result
+                |> RemoteData.map
+                    (Routes.enterLocation location << SelectList.selected)
+                |> RemoteData.withDefault Cmd.none
             )
 
 
@@ -116,29 +129,41 @@ parseVideo route =
 
 selectSongById : Model -> String -> Model
 selectSongById model video =
-    { model | songs = SelectList.select ((==) video << .video) model.songs }
+    { model
+        | songs =
+            RemoteData.map
+                (SelectList.select ((==) video << .video))
+                model.songs
+    }
 
 
 
 -- VIEW
 
 
+remoteView : (a -> Html msg) -> RemoteData e a -> Html msg
+remoteView view data =
+    data
+        |> RemoteData.map view
+        |> RemoteData.withDefault (Html.text "")
+
+
 view : Model -> Html Msg
 view model =
     Html.div
         [ Attributes.class "app-container" ]
-        [ songView model
+        [ remoteView (songView model.autoplay) model.songs
         , navButton True
         , playAllButton model.autoplay
-        , navigationView model
+        , remoteView (navigationView model.drawerState) model.songs
         ]
 
 
-songView : Model -> Html Msg
-songView model =
+songView : Bool -> Songs.Model -> Html Msg
+songView autoplay songs =
     let
         song =
-            SelectList.selected model.songs
+            SelectList.selected songs
     in
         Html.div
             [ Attributes.class "song-view" ]
@@ -152,16 +177,16 @@ songView model =
                 [ Attributes.class "song-view__selector" ]
                 [ Html.a
                     [ Attributes.class "arrow"
-                    , Attributes.href (previousUrl model)
+                    , Attributes.href (previousUrl songs)
                     ]
                     [ Html.text "<" ]
                 , Html.div
                     [ Attributes.class "song-view__video" ]
-                    [ youtubeVideo song.video model.autoplay
+                    [ youtubeVideo song.video autoplay
                     ]
                 , Html.a
                     [ Attributes.class "arrow"
-                    , Attributes.href (nextUrl model)
+                    , Attributes.href (nextUrl songs)
                     ]
                     [ Html.text ">" ]
                 ]
@@ -173,16 +198,16 @@ songView model =
             ]
 
 
-navigationView : Model -> Html Msg
-navigationView model =
+navigationView : Maybe DrawerMode -> Songs.Model -> Html Msg
+navigationView drawerState songs =
     Html.div
         [ Attributes.classList
             [ ( "navigation-view", True )
-            , ( "navigation-view--open", drawerOpen model.drawerState )
+            , ( "navigation-view--open", drawerOpen drawerState )
             ]
         ]
-        [ navViewHeader model.drawerState
-        , navList model
+        [ navViewHeader drawerState
+        , navList drawerState songs
         ]
 
 
@@ -203,44 +228,44 @@ navTitle =
     Html.text "Artists"
 
 
-artistList : Model -> List (Html Msg)
-artistList model =
-    model.songs
+artistList : Maybe DrawerMode -> Songs.Model -> List (Html Msg)
+artistList drawerState songs =
+    songs
         |> SelectList.toList
         |> List.map .artist
         |> List.distinct
         |> List.sort
-        |> List.map (artistLink model)
+        |> List.map (artistLink drawerState songs)
 
 
-songList : Model -> List (Html Msg)
-songList model =
-    model.songs
+songList : Songs.Model -> List (Html Msg)
+songList songs =
+    songs
         |> SelectList.toList
-        |> List.map (songLinkMain (SelectList.selected model.songs))
+        |> List.map (songLinkMain (SelectList.selected songs))
 
 
-listFunc : DrawerMode -> Model -> List (Html Msg)
+listFunc : DrawerMode -> Songs.Model -> List (Html Msg)
 listFunc drawerMode =
     case drawerMode of
         Playlist ->
             songList
 
         Artists _ ->
-            artistList
+            artistList (Just drawerMode)
 
 
-navList : Model -> Html Msg
-navList model =
+navList : Maybe DrawerMode -> Songs.Model -> Html Msg
+navList drawerState songs =
     let
         listFn =
-            model.drawerState
+            drawerState
                 |> Maybe.map listFunc
                 |> Maybe.withDefault (\_ -> [])
     in
         Html.div
             [ Attributes.class "nav-list" ]
-            (listFn model)
+            (listFn songs)
 
 
 songLink : String -> Song -> Song -> Html Msg
@@ -266,49 +291,49 @@ songLinkSmall =
     songLink "song-link-small"
 
 
-nextUrl : Model -> String
-nextUrl model =
-    model.songs
+nextUrl : Songs.Model -> String
+nextUrl songs =
+    songs
         |> Songs.next
         |> Maybe.map .video
         |> Maybe.map (Routes.url << SongView)
         |> Maybe.withDefault "#"
 
 
-previousUrl : Model -> String
-previousUrl model =
-    model.songs
+previousUrl : Songs.Model -> String
+previousUrl songs =
+    songs
         |> Songs.previous
         |> Maybe.map .video
         |> Maybe.map (Routes.url << SongView)
         |> Maybe.withDefault "#"
 
 
-artistLink : Model -> String -> Html Msg
-artistLink model artist =
+artistLink : Maybe DrawerMode -> Songs.Model -> String -> Html Msg
+artistLink drawerState songs artist =
     Html.div
         [ Attributes.class "artist-link" ]
         [ Html.div
             [ Attributes.classList
                 [ ( "nav-link", True )
                 , ( "nav-link--selected-artist"
-                  , isSelected model.drawerState artist
+                  , isSelected drawerState artist
                   )
                 ]
             , Events.onClick (SelectArtist artist)
             ]
             [ Html.text artist ]
-        , artistSongView model artist
+        , artistSongView drawerState songs artist
         ]
 
 
-artistSongView : Model -> String -> Html Msg
-artistSongView model artist =
-    if isSelected model.drawerState artist then
+artistSongView : Maybe DrawerMode -> Songs.Model -> String -> Html Msg
+artistSongView drawerState songs artist =
+    if isSelected drawerState artist then
         Html.div
             []
-            (artistSongs model artist
-                |> List.map (songLinkSmall (SelectList.selected model.songs))
+            (artistSongs songs artist
+                |> List.map (songLinkSmall (SelectList.selected songs))
             )
     else
         Html.text ""
@@ -324,9 +349,9 @@ isSelected drawerState artist =
             False
 
 
-artistSongs : Model -> String -> List Song
-artistSongs model artist =
-    model.songs
+artistSongs : Songs.Model -> String -> List Song
+artistSongs songs artist =
+    songs
         |> SelectList.toList
         |> List.filter ((==) artist << .artist)
         |> List.sortBy .title

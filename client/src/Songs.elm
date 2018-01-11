@@ -2,10 +2,9 @@ module Songs
     exposing
         ( Model
         , Song
-        , init
-        , initSelected
         , next
         , previous
+        , fromList
         )
 
 import SelectList exposing (SelectList)
@@ -25,14 +24,6 @@ type alias Song =
     }
 
 
-init : SelectList Song
-init =
-    SelectList.fromLists
-        []
-        initSelected
-        initAfter
-
-
 next : SelectList a -> Maybe a
 next selectList =
     selectList
@@ -48,21 +39,14 @@ previous selectList =
         |> List.head
 
 
-initSelected : Song
-initSelected =
-    { title = "715 - CR∑∑KS"
-    , artist = "Bon Iver"
-    , album = "22, A Million"
-    , year = 2016
-    , video = "P_Fx1yq3A8M"
-    , notes = """
-Creeks is probably my favorite song from *22, A Million*.  It highlights the
- instrument he uses throughout the album - the Messina - created on his request
- by Justin's sound engineer, Chris Messina.  It basically allows him to create
- harmonies in real-time while he's singing.  Seeing him play this song live is
- incredibly powerful.
-"""
-    }
+fromList : List Song -> Maybe Model
+fromList list =
+    case list of
+        [] ->
+            Nothing
+
+        x :: xs ->
+            Just (SelectList.fromLists [] x xs)
 
 
 initAfter : List Song

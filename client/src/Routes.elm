@@ -8,7 +8,7 @@ module Routes
 
 import UrlParser exposing ((</>))
 import Navigation exposing (Location)
-import Songs exposing (initSelected)
+import Songs exposing (Song)
 
 
 type Route
@@ -16,9 +16,11 @@ type Route
     | SongView String
 
 
-enterLocation : Location -> Cmd msg
-enterLocation =
-    redirect << UrlParser.parseHash route
+enterLocation : Location -> Song -> Cmd msg
+enterLocation location song =
+    location
+        |> UrlParser.parseHash route
+        |> redirect song
 
 
 route : UrlParser.Parser (Route -> a) a
@@ -34,11 +36,11 @@ parseLocation =
     UrlParser.parseHash route
 
 
-redirect : Maybe Route -> Cmd msg
-redirect route =
+redirect : Song -> Maybe Route -> Cmd msg
+redirect song route =
     case route of
         Just Home ->
-            Navigation.modifyUrl ("#/song/" ++ initSelected.video)
+            Navigation.modifyUrl ("#/song/" ++ song.video)
 
         Just (SongView video) ->
             Navigation.modifyUrl ("#/song/" ++ video)
