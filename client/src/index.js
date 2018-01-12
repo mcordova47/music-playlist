@@ -5,7 +5,9 @@ require('./css/index.scss')
 const Elm = require('./Main.elm')
 const mountNode = document.getElementById('main')
 
-const app = Elm.Main.embed(mountNode)
+const app = Elm.Main.embed(mountNode, {
+  dev: TARGET_ENV === 'development'
+})
 
 window.onYouTubePlayerAPIReady = createVideoPlayer
 

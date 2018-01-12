@@ -1,7 +1,6 @@
 client/node_modules
 client/elm-stuff
 client/dist
-server/dist
 server/env
 server/lib
 server/static

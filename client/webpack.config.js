@@ -15,7 +15,7 @@ const ELM_LOADER = TARGET_ENV === 'production'
   ? 'elm-webpack-loader?verbose=true&warn=true'
   : 'elm-webpack-loader?verbose=true&warn=true&debug=true'
 
-const DIST_PATH = path.resolve(__dirname, '../server/dist')
+const DIST_PATH = path.resolve(__dirname, 'dist')
 
 const common = {
   entry: {
@@ -84,7 +84,11 @@ const common = {
         from: 'src/img',
         to: 'img'
       }
-    ])
+    ]),
+
+    new webpack.DefinePlugin({
+      TARGET_ENV: JSON.stringify(TARGET_ENV)
+    })
   ]
 }
 

@@ -44,9 +44,11 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'music_playlist',
+    'corsheaders',
 )
 
 MIDDLEWARE_CLASSES = (
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -142,3 +144,11 @@ USE_TZ = True
 
 STATIC_ROOT = 'static'
 STATIC_URL = '/static/'
+
+# CORS
+
+CORS_ORIGIN_ALLOW_ALL = False
+
+CORS_ORIGIN_WHITELIST = (
+    'mcordova47.github.io',
+)

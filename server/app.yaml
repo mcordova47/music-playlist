@@ -6,8 +6,6 @@ threadsafe: yes
 handlers:
 - url: /static
   static_dir: static/
-- url: /playlist
-  static_dir: dist/
 - url: .*
   script: mysite.wsgi.application
 

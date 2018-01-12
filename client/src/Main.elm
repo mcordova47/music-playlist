@@ -16,9 +16,9 @@ import Requests
 import RemoteData exposing (RemoteData(..), WebData)
 
 
-main : Program Never Model Msg
+main : Program Flags Model Msg
 main =
-    Navigation.program UrlChange
+    Navigation.programWithFlags UrlChange
         { init = init
         , update = update
         , view = view
@@ -42,13 +42,18 @@ type DrawerMode
     | Artists (Maybe String)
 
 
-init : Location -> ( Model, Cmd Msg )
-init location =
+type alias Flags =
+    { dev : Bool
+    }
+
+
+init : Flags -> Location -> ( Model, Cmd Msg )
+init flags location =
     ( { songs = Loading
       , drawerState = Nothing
       , autoplay = False
       }
-    , RemoteData.sendRequest Requests.songs
+    , RemoteData.sendRequest (Requests.songs flags.dev)
         |> Cmd.map (RetrieveSongs location)
     )
 

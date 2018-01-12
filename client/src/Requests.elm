@@ -14,9 +14,17 @@ import Json.Decode as Decode
 import Songs exposing (Song)
 
 
-songs : Request Songs.Model
-songs =
-    Http.get "/api/songs/" songListDecoder
+songs : Bool -> Request Songs.Model
+songs dev =
+    Http.get (songUrl dev) songListDecoder
+
+
+songUrl : Bool -> String
+songUrl dev =
+    if dev then
+        "/api/songs/"
+    else
+        "https://music-playlist-191702.appspot.com/api/songs/"
 
 
 songListDecoder : Decoder Songs.Model
