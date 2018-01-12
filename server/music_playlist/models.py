@@ -8,3 +8,6 @@ class Song(models.Model):
     year = models.IntegerField()
     album = models.CharField(max_length=200)
     notes = models.CharField(max_length=2000)
+
+    def __unicode__(self):
+        return 'Song: ' + self.title
