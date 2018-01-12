@@ -10,4 +10,4 @@ class Song(models.Model):
     notes = models.TextField(blank=True)
 
     def __unicode__(self):
-        return 'Song: ' + self.title
+        return 'Song: ' + self.title + ', ' + self.artist
