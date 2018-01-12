@@ -6,6 +6,16 @@
   font-family: 'Josefin Slab', serif;
 }
 
+.song-view--error {
+  display: flex;
+  font-family: Roboto, sans-serif;
+  font-size: 18px;
+}
+
+.song-view--error .buffer {
+  flex: 1;
+}
+
 .song-view {
   max-width: 800px;
   margin: auto;

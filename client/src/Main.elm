@@ -14,6 +14,7 @@ import Formatting exposing (Format, (<>), s, string)
 import Json.Decode as Decode exposing (Value, decodeValue)
 import Requests
 import RemoteData exposing (RemoteData(..), WebData)
+import Http exposing (Error(..))
 
 
 main : Program Value Model Msg
@@ -155,11 +156,30 @@ view : Model -> Html Msg
 view model =
     Html.div
         [ Attributes.class "app-container" ]
-        [ remoteView (songView model.autoplay) model.songs
+        [ songViewRemote model.autoplay model.songs
         , navButton True
         , playAllButton model.autoplay
         , remoteView (navigationView model.drawerState) model.songs
         ]
+
+
+songViewRemote : Bool -> WebData Songs.Model -> Html Msg
+songViewRemote autoplay data =
+    case data of
+        Failure err ->
+            Html.div
+                [ Attributes.class "song-view--error" ]
+                [ Html.div [ Attributes.class "buffer" ] []
+                , Html.div []
+                    [ Html.text (songsError err) ]
+                , Html.div [ Attributes.class "buffer" ] []
+                ]
+
+        Success songs ->
+            songView autoplay songs
+
+        _ ->
+            Html.text ""
 
 
 songView : Bool -> Songs.Model -> Html Msg
@@ -199,6 +219,25 @@ songView autoplay songs =
                     [ Markdown.toHtml [] song.notes ]
                 ]
             ]
+
+
+songsError : Error -> String
+songsError err =
+    case err of
+        BadUrl _ ->
+            "Failed to retrieve songs."
+
+        Timeout ->
+            "Failed to retrieve songs.  Network Timed out."
+
+        NetworkError ->
+            "Failed to retrieve songs.  No network connection."
+
+        BadStatus resp ->
+            "Failed to retrieve songs.  " ++ resp.status.message ++ "."
+
+        BadPayload msg resp ->
+            "Failed to retrieve songs.  Received an unexpected response."
 
 
 navigationView : Maybe DrawerMode -> Songs.Model -> Html Msg
