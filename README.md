@@ -14,7 +14,7 @@ The server is python/django, with only one endpoint for the list of songs stored
     $ python manage.py runserver
 
 ### Webpack dev server
-* Hot module reloads and elm time-travel debugger
+* Hot module reloading and elm time-travel debugger
 * Redirects api calls to django server
 
       $ npm start
