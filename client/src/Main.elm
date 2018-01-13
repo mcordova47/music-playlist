@@ -187,6 +187,12 @@ songView autoplay songs =
     let
         song =
             SelectList.selected songs
+
+        back =
+            previousUrl songs
+
+        forward =
+            nextUrl songs
     in
         Html.div
             [ Attributes.class "song-view" ]
@@ -199,8 +205,11 @@ songView autoplay songs =
             , Html.div
                 [ Attributes.class "song-view__selector" ]
                 [ Html.a
-                    [ Attributes.class "arrow"
-                    , Attributes.href (previousUrl songs)
+                    [ Attributes.classList
+                        [ ( "arrow", True )
+                        , ( "arrow--disabled", back == "#" )
+                        ]
+                    , Attributes.href back
                     ]
                     [ Html.text "<" ]
                 , Html.div
@@ -208,8 +217,11 @@ songView autoplay songs =
                     [ youtubeVideo song.video autoplay
                     ]
                 , Html.a
-                    [ Attributes.class "arrow"
-                    , Attributes.href (nextUrl songs)
+                    [ Attributes.classList
+                        [ ( "arrow", True )
+                        , ( "arrow--disabled", forward == "#" )
+                        ]
+                    , Attributes.href forward
                     ]
                     [ Html.text ">" ]
                 ]
