@@ -8,13 +8,36 @@ The front end is written in [elm](http://elm-lang.org), with ports to JavaScript
 The server is python/django, with only one endpoint for the list of songs stored in a MySQL DB currently.
 
 ### Django server
-    $ cd server
+Set up virtual environment
+
+    $ virtualenv env
     $ env/Scripts/activate
     $ pip install -r requirements.txt
+
+Run django server
+
     $ python manage.py runserver
+
+DB Migrations
+
+    $ python manage.py makemigrations
+    $ python manage.py migrate
+
+Connect to Cloud SQL via proxy
+
+    $ cloud_sql_proxy -instances=[INSTANCE_CONNECTION_NAME]=tcp:3306
 
 ### Webpack dev server
 * Hot module reloading and elm time-travel debugger
 * Redirects api calls to django server
 
       $ npm start
+
+## Production
+The front end is hosted on github pages
+
+    $ npm run deploy
+
+The server is hosted on google app engine
+
+    $ gcloud app deploy
