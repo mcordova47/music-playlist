@@ -178,7 +178,10 @@ songViewRemote autoplay data =
         Success songs ->
             songView autoplay songs
 
-        _ ->
+        Loading ->
+            spinner
+
+        NotAsked ->
             Html.text ""
 
 
@@ -498,6 +501,28 @@ drawerOpen drawerState =
 
         Just _ ->
             True
+
+
+spinner : Html msg
+spinner =
+    Html.div
+        [ Attributes.class "spinner" ]
+        [ Html.div
+            [ Attributes.class "rect1" ]
+            []
+        , Html.div
+            [ Attributes.class "rect2" ]
+            []
+        , Html.div
+            [ Attributes.class "rect3" ]
+            []
+        , Html.div
+            [ Attributes.class "rect4" ]
+            []
+        , Html.div
+            [ Attributes.class "rect5" ]
+            []
+        ]
 
 
 
