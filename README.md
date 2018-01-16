@@ -36,9 +36,9 @@ Connect to Cloud SQL via proxy
 ## Production
 The front end is hosted on github pages
 
-    $ pip install -r requirements-vendor.txt -t lib
     $ npm run deploy
 
 The server is hosted on google app engine
 
+    $ pip install -r requirements-vendor.txt -t lib
     $ gcloud app deploy
