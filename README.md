@@ -41,4 +41,5 @@ The front end is hosted on github pages
 The server is hosted on google app engine
 
     $ pip install -r requirements-vendor.txt -t lib
+    $ python manage.py collectstatic
     $ gcloud app deploy
