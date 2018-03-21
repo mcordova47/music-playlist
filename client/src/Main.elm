@@ -15,6 +15,7 @@ import Json.Decode as Decode exposing (Value, decodeValue)
 import Requests
 import RemoteData exposing (RemoteData(..), WebData)
 import Http exposing (Error(..))
+import Util.NaturalOrdering as NatOrd
 
 
 main : Program Value Model Msg
@@ -291,7 +292,7 @@ artistList drawerState songs =
         |> SelectList.toList
         |> List.map .artist
         |> List.distinct
-        |> List.sort
+        |> List.sortWith NatOrd.compare
         |> List.map (artistLink drawerState songs)
 
 
@@ -411,7 +412,7 @@ artistSongs songs artist =
     songs
         |> SelectList.toList
         |> List.filter ((==) artist << .artist)
-        |> List.sortBy .title
+        |> List.sortWith (\a b -> NatOrd.compare a.title b.title)
 
 
 navButton : Bool -> Html Msg
