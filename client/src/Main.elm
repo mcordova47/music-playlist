@@ -3,7 +3,7 @@ module Main exposing (main)
 import Html exposing (Html)
 import Html.Attributes as Attributes
 import Html.Events as Events
-import List.Extra as List
+import Util.List as List
 import Ports
 import Navigation exposing (Location)
 import Markdown

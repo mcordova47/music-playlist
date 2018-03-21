@@ -1,4 +1,4 @@
-module List.Extra exposing (..)
+module Util.List exposing (distinct)
 
 
 distinct : List a -> List a
