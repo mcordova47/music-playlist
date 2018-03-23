@@ -412,7 +412,7 @@ artistSongs songs artist =
     songs
         |> SelectList.toList
         |> List.filter ((==) artist << .artist)
-        |> List.sortWith (\a b -> NatOrd.compare a.title b.title)
+        |> List.sortWith (NatOrd.compareOn .title)
 
 
 navButton : Bool -> Html Msg
