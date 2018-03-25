@@ -15,7 +15,7 @@ import Json.Decode as Decode exposing (Value, decodeValue)
 import Requests
 import RemoteData exposing (RemoteData(..), WebData)
 import Http exposing (Error(..))
-import Util.NaturalOrdering as NatOrd
+import NaturalOrdering as NatOrd
 
 
 main : Program Value Model Msg
