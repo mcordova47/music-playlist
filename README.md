@@ -37,4 +37,4 @@ The front end is hosted on github pages
 
 The server is hosted on google app engine
 
-    $ gcloud app deploy
+    $ gcloud app deploy --project music-playlist-191702
