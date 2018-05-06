@@ -7,25 +7,22 @@ Click the icon next to the menu to toggle autoplay mode.
 The front end is written in [elm](http://elm-lang.org), with ports to JavaScript to use the youtube API to listen for video ended events.
 The server is python/django, with only one endpoint for the list of songs stored in a MySQL DB currently.
 
-### Django server
-Set up virtual environment
+### Ruby server
+Install dependencies
 
-    $ virtualenv env
-    $ env/Scripts/activate
-    $ pip install -r requirements.txt
+    $ bundle install
 
-Run django server
+Run ruby server
 
-    $ python manage.py runserver
+    $ rails server -p 8000
 
 DB Migrations
 
-    $ python manage.py makemigrations
-    $ python manage.py migrate
+    $ rails db:migrate
 
 Connect to Cloud SQL via proxy
 
-    $ cloud_sql_proxy -instances=[INSTANCE_CONNECTION_NAME]=tcp:3306
+    $ cloud_sql_proxy -instances=music-playlist-191702:us-central1:instance-2=tcp:3306 -credential_file="./credentials.json"
 
 ### Webpack dev server
 * Hot module reloading and elm time-travel debugger
@@ -40,6 +37,4 @@ The front end is hosted on github pages
 
 The server is hosted on google app engine
 
-    $ pip install -r requirements-vendor.txt -t lib
-    $ python manage.py collectstatic
     $ gcloud app deploy

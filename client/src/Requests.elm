@@ -4,7 +4,7 @@ import Http exposing (Request)
 import Json.Decode as Decode
     exposing
         ( Decoder
-        , at
+        , field
         , list
         , string
         , int
@@ -36,12 +36,12 @@ songListDecoder =
 songDecoder : Decoder Song
 songDecoder =
     Decode.map6 Song
-        (at [ "fields", "video" ] string)
-        (at [ "fields", "title" ] string)
-        (at [ "fields", "artist" ] string)
-        (at [ "fields", "year" ] int)
-        (at [ "fields", "album" ] string)
-        (at [ "fields", "notes" ] string)
+        (field "video" string)
+        (field "title" string)
+        (field "artist" string)
+        (field "year" int)
+        (field "album" string)
+        (field "notes" string)
 
 
 fromList : List Song -> Decoder Songs.Model
